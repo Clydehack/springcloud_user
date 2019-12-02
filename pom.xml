@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<!-- 以上为maven相关 -->
 	
-	<!-- 引入springboot依赖 -->
+	<!-- 引入springboot依赖，继承父工程，SpringBoot自动添加很多依赖，省的自己添加 -->
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.4.3.RELEASE</version>
+		<version>1.5.9.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	
@@ -17,53 +19,64 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Camden.SR4</version>
+				<version>${spring-cloud.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	
-	<!-- 项目说明 -->
+	<!-- 项目简介（版本、打包方式） -->
 	<groupId>com.ant</groupId>
 	<artifactId>springcloud-user</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	
+	<!-- 名称和描述 -->
 	<name>springcloud-user</name>
 	<description>用户组件</description>
 
-	<!-- 工具版本 -->
+	<!-- 编码格式、版本 -->
 	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
+		<spring-cloud.version>Edgware.RELEASE</spring-cloud.version><!-- springcloud -->
+		<swagger.version>2.9.2</swagger.version>					<!-- 丝袜哥 -->
+		<fastjson.version>1.2.47</fastjson.version>					<!-- json工具 -->
+		<emoji.version>4.0.0</emoji.version>						<!-- 特殊表情转码 -->
+		<thumbnailator.version>0.4.8</thumbnailator.version>		<!-- google图片处理 -->
+		<googlezxing.version>3.0.0</googlezxing.version>			<!-- google二维码 -->
+		<!-- 配置启动Spring Boot类，解决多个main导致 install 失败的问题 -->
+        <start-class>com.template.ie.SpringcloudUserApplication</start-class>
 	</properties>
 
+	<!-- maven 依赖 -->
 	<dependencies>
-		<!-- 服务治理 - 客户端 -->
+		<!-- spring cloud - 服务治理客户端 -->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-eureka</artifactId>
 		</dependency>
 	
-		<!-- web开发依赖 -->
+		<!-- spring boot - start -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<!-- 屏蔽某些对组建的依赖 -->
 			<exclusions>
+				<!-- 移除默认web容器，普遍认为是重容器 -->
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-tomcat</artifactId>
 				</exclusion>
-				<exclusion>
-					<artifactId>hibernate-validator</artifactId>
-					<groupId>org.hibernate</groupId>
-				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- 添加undertow -->
+		<!-- undertow 高性能web容器 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-undertow</artifactId>
 		</dependency>
+		<!-- spring boot - end -->
 		
 		<!-- 单元测试 -->
 		<dependency>
@@ -78,6 +91,19 @@
 	        <artifactId>spring-boot-starter-actuator</artifactId>
 	    </dependency>
 	    
+		<!-- swagger - begin -->
+		<dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger2</artifactId>
+		    <version>${swagger.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>io.springfox</groupId>
+		    <artifactId>springfox-swagger-ui</artifactId>
+		    <version>${swagger.version}</version>
+		</dependency>
+		<!-- swagger - end -->
+
 		<!-- 热部署 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -85,40 +111,91 @@
 			<optional>true</optional>
 		</dependency>
 		
-		<!-- 数据库相关 begin -->
-		<!-- 高性能数据库连接池 -->
+		<!-- lombok 省略setter/getter方法 -->
 		<dependency>
-			<groupId>com.zaxxer</groupId>
-			<artifactId>HikariCP</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+		 
+        <!-- Fastjson -->
+        <dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>fastjson</artifactId>
+			<version>${fastjson.version}</version>
 		</dependency>
-		<!-- mybatis -->
+		
+		<!-- redis - begin -->
+		<dependency> 
+			<groupId>org.springframework.boot</groupId> 
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+			<exclusions>
+				<!-- 不依赖于redis异步客户端lettuce -->
+				<exclusion>
+					<groupId>io.lettuce</groupId>
+					<artifactId>lettuce-core</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- 引入redis客户端驱动jedis -->
 		<dependency>
-			<groupId>org.mybatis.spring.boot</groupId>
-			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>2.0.0</version>
+			<groupId>redis.clients</groupId>
+			<artifactId>jedis</artifactId>
 		</dependency>
-		<!-- mysql驱动 -->
-		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-		</dependency>
-		<!-- spring事务管理依赖，数据库连接jdbc依赖
+		<!-- redis - end -->
+		
+        <!-- mongodb -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jdbc</artifactId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
+		
+		<!-- netty依赖  -->
+		<dependency>
+		    <groupId>io.netty</groupId>
+		    <artifactId>netty-all</artifactId>
+		    <version>4.1.32.Final</version> 
+		</dependency>
+		
+		<!-- google二维码 - begin -->
+		<dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>${googlezxing.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>${googlezxing.version}</version>
+        </dependency>
+		<!-- google二维码 - end -->
+		
+		<!-- commons加解密依赖 -->
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+		</dependency>
+		
+		<!-- 特殊表情转码 
+		<dependency>
+			<groupId>com.vdurmont</groupId>
+			<artifactId>emoji-java</artifactId>
+			<version>${emoji.version}</version>
+		</dependency>-->
+		
+		<!-- base64的简单编码器和解码器 
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.10</version>
 		</dependency> -->
 		
-		<!-- 书本推荐使用的工具 -->
-		<!-- 数据持久层框架
+		<!-- java图片处理 google开源工具类 -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency> -->
-		<!-- H2数据库 - 十分适合作为嵌入式数据库
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-		</dependency> -->
+			<groupId>net.coobird</groupId>
+			<artifactId>thumbnailator</artifactId>
+		    <version>${thumbnailator.version}</version>
+		</dependency>
 		
 	</dependencies>
 
